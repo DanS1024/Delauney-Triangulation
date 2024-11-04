@@ -65,7 +65,7 @@ class TriangularMesh:
         self.faces = set() if faces == None else faces
         self.halfedges = set() if halfedges == None else halfedges
 
-    # sort all vertices by Hilbert curve index
+    # sort all vertices by Hilbert coordinate
     def sort_vertices(self):
         self.vertices.sort(key=lambda x: x.Hilbert)
 
@@ -131,7 +131,7 @@ class Face:
         return f"[{self.halfedge.vertex} {self.halfedge.next.vertex} {self.halfedge.prev.vertex}]"
 
 
-# calculate Hilbert index for a point
+# calculate Hilbert coordinate for a point
 def Hilbert(point, depth, O, R, B): # O, R, B: origin, red, and blue vectors
     point, O, R, B = map(np.array, [point, O, R, B]) # convert to numpy arrays for vector operations
     index = [0] * depth
@@ -167,8 +167,8 @@ def check_triangle(halfedge, p):
         return incircle(*coords, p.coords) >= 0
     elif len(coords) == 2:
         # one vertex is at infinity, incircle test becomes an orientation test
-        if halfedge.next.vertex.index < 0:
-            coords = [coords[1], coords[0]] # reverse order of non-infinite vertices
+        if halfedge.next.vertex.index < 0: # if middle vertex is infinite, reverse order of non-infinite vertices
+            coords = [coords[1], coords[0]]
         return orient2d(*coords, p.coords) >= 0
     else:
         # two vertices are at infinity, incircle test becomes a coordinate test
@@ -270,7 +270,7 @@ def triangulate(mesh):
     # manually add the first point to the mesh
     p = mesh.vertices[4]
     init_hedges = []
-    for i in range(4): # 4 triangles around p
+    for i in range(4): # add 4 triangles around p
         init_hedges += mesh.add_triangle([mesh.vertices[i], mesh.vertices[(i+1)%4], mesh.vertices[4]], out=True)
     
     # connect twin halfedges of the 4 triangles
@@ -289,7 +289,7 @@ def triangulate(mesh):
     return mesh
 
 # time complexity comparison
-def time_complexity(avg_loops=5):
+def time_complexity(avg_loops=5): # average over multiple loops for more accurate timing
     nums = np.linspace(1, 4, 50)
     nums = np.power(10, nums) # powers of 10 from 10 to 10^4, evenly spaced in log space
     del2d_times = []
@@ -384,7 +384,7 @@ def animate(FPS, vel, acc, save_anim): # vel: velocity factor, acc: acceleration
             pygame.gfxdraw.filled_polygon(screen, list(v.coords for v in vertices), colour)
             pygame.gfxdraw.aapolygon(screen, list(v.coords for v in vertices), (0, 0, 0))
 
-    # main loop
+    # animation loop
     running = True
     while running:
         for event in pygame.event.get():
